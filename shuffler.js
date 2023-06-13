@@ -47,13 +47,31 @@ const pushToMain = (commitMessage) => {
         return 
     }
     const backupPath = path.join(rootPath, 'backup')
-    const prevStateFolder = path.join(backupPath, commitMessage)
+    let folderName = commitMessage;
+    if(fs.existsSync(path.join(backupPath, commitMessage))) {
+        throw new Error("Please provide a unique descriptive message for this push")
+    }
+    const prevStateFolder = path.join(backupPath, folderName)
 
     fs.copySync(mainPath, prevStateFolder)
 
     fs.copySync(currDir, mainPath)
 
     openBranch(mainPath)
+}
+
+const deleteBranch = (folderName) => {
+    const fullPath = path.join(rootPath, folderName)
+
+    if(!fs.existsSync(fullPath)) {
+        throw new Error("Branch does not exists within the repository")
+    }
+
+    fs.removeSync(fullPath)
+
+    if(fs.existsSync(fullPath)) {
+        throw new Error("Branch couldn't be deleted. Please make sure the branch folder is not currently open in any other window")
+    }
 }
 
 const main = (args) => {
@@ -63,6 +81,9 @@ const main = (args) => {
             break
         case 'push-main':
             pushToMain(args[3])
+            break
+        case 'del-branch':
+            deleteBranch(args[3])
             break
         default:
             console.log("Argument not recognized. Options: 'to-branch <folder-name>' and 'push-main <push-message>'")
